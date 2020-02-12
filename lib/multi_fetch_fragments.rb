@@ -1,8 +1,11 @@
 module MultiFetchFragments
   extend ActiveSupport::Concern
 
+  # https://littlelines.com/blog/2018/01/31/replace-alias-method-chain
+  # alias_method_chain is deprecated, convert to alias_method
   included do
-    alias_method_chain :render_collection, :multi_fetch_cache
+    alias_method :render_collection_without_multi_fetch_cache, :render_collection
+    alias_method :render_collection, :render_collection_with_multi_fetch_cache
   end
 
   private
@@ -83,7 +86,7 @@ module MultiFetchFragments
       ActionController::Base.perform_caching && cache_option
     end
 
-    # from Rails fragment_cache_key in ActionController::Caching::Fragments. Adding it here since it's tucked inside an instance method on the controller, and 
+    # from Rails fragment_cache_key in ActionController::Caching::Fragments. Adding it here since it's tucked inside an instance method on the controller, and
     # it's utility could be used in a view without a controller
     def fragment_cache_key(key)
       ActiveSupport::Cache.expand_cache_key(key.is_a?(Hash) ? url_for(key).split("://").last : key, :views)
